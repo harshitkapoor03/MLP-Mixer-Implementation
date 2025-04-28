@@ -7,6 +7,10 @@ A PyTorch implementation of the **MLP-Mixer** architecture for image classificat
 This project re-creates the ideas presented in [MLP-Mixer: An all-MLP Architecture for Vision](https://arxiv.org/abs/2105.01601) using modern training practices.
 
 ---
+Note:
+This code is implemented for the CIFAR-10 dataset but can easily be adapted for any image classification dataset by adjusting the training hyperparameters.
+It's important to note that, conventionally, MLP-Mixer models perform poorly on small datasets like CIFAR-10 when trained from scratch, and their strengths become more apparent at larger scales (e.g., ImageNet). Nevertheless, due to computational constraints, this project focuses on CIFAR-10. Despite the limitations, the model achieves respectable accuracy and loss values compared to convolutional and transformer-based models when trained properly.
+
 
 ## 📑 Table of Contents
 - [Overview](#overview)
