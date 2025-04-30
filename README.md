@@ -88,6 +88,4 @@ Feel free to open issues or PRs if you have improvements! Some ideas:
 - Implement more efficient MLP variants
 - Port to other datasets
 
-## License
 
-MIT
