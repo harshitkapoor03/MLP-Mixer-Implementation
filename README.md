@@ -1,144 +1,93 @@
+# MLP-Mixer for CIFAR-10 (PyTorch Implementation)
 
----
+This is a PyTorch implementation of the MLP-Mixer architecture from the paper ["MLP-Mixer: An all-MLP Architecture for Vision"](https://arxiv.org/abs/2105.01601), trained on CIFAR-10. I built this to better understand how pure MLP architectures perform compared to CNNs and Transformers for vision tasks.
 
-# 🧩 MLP-Mixer for CIFAR-10 (PyTorch Implementation)
+## Key Features
 
-A PyTorch implementation of the **MLP-Mixer** architecture for image classification on the CIFAR-10 dataset.  
-This project re-creates the ideas presented in [MLP-Mixer: An all-MLP Architecture for Vision](https://arxiv.org/abs/2105.01601) using modern training practices.
+- Pure MLP architecture (no convolutions or attention)
+- Implements both token-mixing and channel-mixing MLPs
+- Includes modern training enhancements:
+  - RandAugment and Mixup data augmentation
+  - Label smoothing
+  - Cosine learning rate schedule with warmup
+  - Early stopping based on validation accuracy
+- Training visualization (accuracy/loss curves)
 
----
-Note:
-This code is implemented for the CIFAR-10 dataset but can easily be adapted for any image classification dataset by adjusting the training hyperparameters.
-It's important to note that, conventionally, MLP-Mixer models perform poorly on small datasets like CIFAR-10 when trained from scratch, and their strengths become more apparent at larger scales (e.g., ImageNet). Nevertheless, due to computational constraints, this project focuses on CIFAR-10. Despite the limitations, the model achieves respectable accuracy and loss values compared to convolutional and transformer-based models when trained properly.
+## Implementation Notes
 
+The model follows the paper's architecture closely:
+- Patch embedding via strided convolution
+- Alternating token-mixing and channel-mixing MLP blocks
+- Layer normalization before each MLP
+- Skip connections around each MLP block
+- Global average pooling before final classification head
 
-## 📑 Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [How It Works (Relation to Paper)](#how-it-works-relation-to-paper)
-- [Repository Structure](#repository-structure)
-- [Installation](#installation)
-- [Usage Guide](#usage-guide)
-- [Applications](#applications)
-- [Contributing](#contributing)
-- [License](#license)
+I added several training improvements beyond the paper:
+- RandAugment and Mixup for better regularization
+- Label smoothing (0.1) to prevent overconfidence
+- Cosine LR schedule with linear warmup
+- Random erasing augmentation
 
----
+## Performance
 
-## 🧠 Overview
+On CIFAR-10, the model achieves ~85% accuracy with default settings. This isn't state-of-the-art (CNNs/Transformers do better), but shows MLPs can work reasonably well for vision tasks.
 
-The project implements an MLP-only image classification model that:
-- **Replaces convolution** and **attention** layers with pure MLPs.
-- **Separately mixes** spatial (token) and feature (channel) information.
-- **Uses modern training tricks** like RandAugment, Mixup, label smoothing, and a cosine learning rate scheduler.
-  
-Our target dataset is **CIFAR-10**, and we train the model fully from scratch, following the philosophy that convolutions and self-attention are *not necessary* for achieving good vision model performance.
+The paper notes MLP-Mixers work better at larger scales (ImageNet), but I implemented this on CIFAR-10 due to compute constraints.
 
----
+## Requirements
 
-## 🚀 Features
-
-- ✅ **Pure MLP architecture** with token-mixing and channel-mixing MLPs  
-- 📦 **RandAugment** and **Mixup** data augmentation  
-- 🧹 **Label smoothing** in loss function  
-- 📉 **Warmup + CosineAnnealing** learning rate scheduling  
-- 🧪 **Early stopping** based on validation accuracy (manual save)  
-- 📈 Training visualization for accuracy and loss curves  
-
----
-
-## 📚 How It Works (Relation to Paper)
-
-This codebase is a faithful implementation of key ideas from the MLP-Mixer paper :
-
-| Paper Concept                         | Our Implementation                                  |
-|:---------------------------------------|:----------------------------------------------------|
-| **Patch Embedding**                    | Conv2D layer with stride = patch size               |
-| **Flatten patches into tokens**        | Flatten + rearrange (`B, C, H, W -> B, N_tokens, C`) |
-| **Token-Mixing MLP**                   | `MlpBlock` after LayerNorm and transposing tokens   |
-| **Channel-Mixing MLP**                 | `MlpBlock` after LayerNorm (row-wise)               |
-| **GELU activation**                    | `nn.GELU` in MLP blocks                             |
-| **Residual (Skip) connections**        | Add original input after each MLP block             |
-| **Layer Normalization**                | Before each MLP block                              |
-| **Global Average Pooling**             | Mean over tokens before final head                  |
-| **Final Head**                         | Linear layer to project to class logits             |
-| **Stochastic Depth (DropPath)**         | Implemented manually inside `MixerBlock`            |
-
-**Training Enhancements (Beyond the Paper):**
-- **RandAugment** for stronger data augmentation.
-- **Mixup** to prevent overfitting.
-- **Label smoothing** to stabilize cross-entropy loss.
-- **Linear Warmup + Cosine Annealing** for smoother learning rate schedules.
-- **Random Erasing** for better regularization.
-
-Thus, we stay true to the spirit of the MLP-Mixer:  
-> *"Convolutions and self-attention are sufficient but not necessary for high performance in vision."* 
-
----
-
-## 📁 Repository Structure
-
-| File/Folder                         | Description                                                             |
-|-------------------------------------|-------------------------------------------------------------------------|
-| `mlp_mixer_cifar10.py`              | Full training script, including model, dataloaders, train/val loops     |
-| `README.md`                         | Documentation file                                                      |
-
-
----
-
-## ⚙️ Installation
-
-### ✅ Prerequisites
 - Python 3.7+
-- PyTorch >= 1.10
-- GPU recommended (for reasonable training time)
+- PyTorch 1.10+
+- torchvision
+- matplotlib, numpy
 
-### 📦 Install required libraries:
+## Usage
 
-```bash
-pip install torch torchvision matplotlib numpy
-```
-
----
-
-## 🏁 Usage Guide
-
-1. **Clone the repository**:
+1. Clone the repo:
 ```bash
 git clone https://github.com/your-username/mlp-mixer-cifar10.git
 cd mlp-mixer-cifar10
 ```
 
-2. **Run the training script**:
+2. Run training:
 ```bash
 python mlp_mixer_cifar10.py
 ```
 
-3. **Outputs**:
-   - Training and validation metrics will be printed every epoch.
-   - Final test accuracy will be evaluated.
-   - Accuracy and Loss curves will be plotted automatically.
+The script will:
+- Download CIFAR-10 automatically
+- Train the model with progress logging
+- Plot training/validation curves
+- Report final test accuracy
 
----
+## Customization
 
-## 🌍 Applications
+You can tweak:
+- Model dimensions (embed dim, MLP sizes)
+- Training hyperparameters (LR, batch size)
+- Augmentation strength
+- Number of epochs
 
-- Research on **pure MLP** vision architectures.
-- Educational demo for replacing **CNNs/Transformers**.
-- Lightweight models for **embedded** or **low-power** vision applications.
+## Why This Project?
 
----
+I was curious if MLPs could really compete with CNNs for vision tasks. This implementation helped me understand:
+- How token mixing works compared to convolutions
+- The importance of good normalization and residual connections
+- How much data augmentation matters for MLP architectures
 
-## 🤝 Contributing
+## Limitations
 
-Pull requests are welcome!  
-Feel free to open an issue for feature requests, improvements, or bug reports.
+- Performance is modest on small datasets
+- Training is slower than CNNs (no optimized conv2d)
+- Not as parameter-efficient as modern architectures
 
----
+## Contributing
 
-## 📄 License
+Feel free to open issues or PRs if you have improvements! Some ideas:
+- Add distributed training support
+- Implement more efficient MLP variants
+- Port to other datasets
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+## License
 
----
-
+MIT
